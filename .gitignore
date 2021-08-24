@@ -1,0 +1,11 @@
+/UserSettings
+/Library
+/Logs
+/Temp
+/obj
+/KAssets
+/Assets/StreamingAssets
+/*.csproj
+/.vs
+/framework.sln
+/RuntimeData

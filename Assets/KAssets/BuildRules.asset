@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80fb53e5e5d87934cae3672fc055d9f1, type: 3}
+  m_Name: BuildRules
+  m_EditorClassIdentifier: 
+  modules:
+  - name: Common
+    DLC: 0
+    rules:
+    - path: Assets/Game/Common/Atlas
+      pattern: '*'
+      bundleName: image
+  - name: Main
+    DLC: 0
+    rules:
+    - path: Assets/Game/Main/Image
+      pattern: '*'
+      bundleName: image
+    - path: Assets/Game/Main/Panel
+      pattern: '*'
+      bundleName: panel
+  - name: BlackJack
+    DLC: 0
+    rules:
+    - path: Assets/Game/BlackJack/Panel
+      pattern: '*'
+      bundleName: panel
+  Script:
+  - path: Script/main
+    pattern: '*'
+    bundleName: main
+  - path: Script/base
+    pattern: '*'
+    bundleName: base
+  - path: Script/system
+    pattern: '*'
+    bundleName: system
+  - path: Script/protocal
+    pattern: '*'
+    bundleName: protocal

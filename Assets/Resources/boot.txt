@@ -1,0 +1,233 @@
+local GameEntry={
+	download=CS.LuaFramework.GameEntry.Download,
+	download_ext=CS.LuaFramework.GameEntry.DownloadExt,
+	lua=CS.LuaFramework.GameEntry.Lua,
+	network=CS.LuaFramework.GameEntry.networkManager,
+    event = CS.LuaFramework.GameEntry.Event,
+}
+local CJson = require('cjson')
+
+local GameObject=CS.UnityEngine.GameObject
+local Assets=CS.kassets.Assets
+local Directory=CS.System.IO.Directory
+local File=CS.System.IO.File
+
+local create = coroutine.create
+local running = coroutine.running
+local resume = coroutine.resume
+local yield = coroutine.yield
+
+local dataPath = CS.LuaFramework.Util.DataPath;  --数据目录
+local resPath = CS.LuaFramework.Util.AppContentPath(); --游戏包资源目录
+
+Boot={
+	version=1,
+}
+
+function Boot.Start()
+	print("Booting......")
+	Boot.Version()
+	--Boot.CheckEngine()
+	Boot.CheckBoot()
+	Boot.Extract()
+	--Boot.CheckResource()
+	Boot.InitAssts()
+	print("Boot end......")
+end
+---------------------------------------------------------------------------------------------
+function Boot.Version()
+	print("Version......")
+	GameEntry.network:HttpGet("127.0.0.1/version.json",function (error, text )
+		print(text)
+		Boot.config=CJson.decode(text)
+	end)
+
+	while Boot.config==nil do yield() end
+end
+--------------------------------------------------------------------------------------------
+function Boot.CheckEngine()
+	print("CheckEngine......")
+	if Boot.config.engine_version == AppConst.EngineVersion then
+		return
+	end
+
+end
+--------------------------------------------------------------------------------------------
+function Boot.CheckBoot()
+	print("CheckBoot......")
+	if Boot.config.boot_version == Boot.version then
+		return
+	end
+	
+	local local_path=dataPath.."boot.txt"
+	local new_boot=nil
+	GameEntry.download_ext:AddDownload(local_path, "127.0.0.1/boot.txt", function (info)
+		if info.state==1 then
+			new_boot=File.ReadAllText(local_path)
+		end
+	end)
+
+	while new_boot==nil do yield() end
+
+	print(new_boot)
+	--GameEntry.lua:DoString(text)
+	local script=loadstring(new_boot)
+	script()
+end
+---------------------------------------------------------------------------------------------
+--解压
+function Boot.Extract()
+	Boot.ExtractList()
+	Boot.ExtractAll()
+end
+
+function Boot.ExtractList()
+	if Directory.Exists(dataPath) then
+		Directory.Delete(dataPath, true)
+	end
+	yield()
+	Directory.CreateDirectory(dataPath);
+
+	Boot.ExteactFile(resPath.."manifest", dataPath.."manifest")
+
+	local init_assets=false
+	Assets.Initialize(function ()
+		init_assets=true
+	end)
+
+	while init_assets==false do yield() end
+end
+
+function Boot.ExtractAll()
+	local ext_list={}
+	local modules=Assets.manifest.modules
+	for i=0,modules.Length-1 do
+		--print("GGGGGGGGGGGGG",modules[i].name)
+		for j=0,modules[i].bundles.Length-1 do
+			local bundle=modules[i].bundles[j]
+			--print("FFFFFFFFFFFFFFFFF",bundle.name)
+			table.insert(ext_list,bundle.name)
+		end
+	end
+	for i=0, Assets.manifest.script.Length-1 do
+		local bundle=Assets.manifest.script[i]
+		table.insert(ext_list,bundle.name)
+	end
+
+	for i,v in ipairs(ext_list) do
+		--print("TTTTTTTTTTTTTTTTTTTTTT"..v)
+		Boot.ExteactFile(resPath..v,dataPath..v)
+	end
+end
+
+function Boot.ExteactFile(infile,outfile)
+	print("extracting--->>> "..outfile)
+	if CS.UnityEngine.Application.platform == CS.UnityEngine.RuntimePlatform.Android then
+		local www = UnityWebRequest.Get(infile)
+		local async =www.SendWebRequest()
+		while not async.isDone do
+			yield()
+		end
+		File.WriteAllBytes(outfile, www.downloadHandler.data)
+    else 
+		File.Copy(infile, outfile, true)
+		yield()
+	end
+end
+--------------------------------------------------------------------------------------------------------------------
+function Boot.CheckResource()
+	-- if Boot.config.resource_version== local_resource_version then
+	-- 	return
+	-- end
+	local manifest=nil
+	GameEntry.download_ext:AddDownload(dataPath.."manifest", "127.0.0.1/Test/manifest", function (info)
+		if info.state==1 then
+			Assets.Initialize(function ()
+				manifest=Assets.manifest
+			end)
+		end
+	end)
+
+	while manifest==nil do yield() end
+
+end
+
+function Boot.UpdateList()
+	local ext_list={}
+	local modules=Assets.manifest.modules
+	for i=0,modules.Length-1 do
+		--print("GGGGGGGGGGGGG",modules[i].name)
+		for j=0,modules[i].bundles.Length-1 do
+			local bundle=modules[i].bundles[j]
+			--print("FFFFFFFFFFFFFFFFF",bundle.name)
+			table.insert(ext_list,bundle.name)
+		end
+	end
+	for i=0, Assets.manifest.script.Length-1 do
+		local bundle=Assets.manifest.script[i]
+		table.insert(ext_list,bundle.name)
+	end
+
+	for i,v in ipairs(ext_list) do
+		--print("TTTTTTTTTTTTTTTTTTTTTT"..v)
+		GameEntry.download_ext:AddDownload(dataPath..v, "127.0.0.1/Test/"..v, function (info)
+			Boot.OnDownload(info)
+		end)
+	end
+end
+
+function Boot.OnDownload(info)
+	if info.state==-1 then
+		error("")
+	elseif info.state==0  then
+		--update view
+	else
+		--add download list
+	end
+end
+
+-------------------------------------------------------------------------------------------------------------------
+function Boot.InitAssts( )
+	Assets.Initialize(function ()  
+		GameEntry.lua:StartMain()
+	end)
+end
+
+Boot.co_list={}
+Boot.co_id=0
+function Boot.StartCoroutine(fun)
+	local id=Boot.co_id
+	Boot.co_id=Boot.co_id+1
+	local co=create(function()
+		fun()
+		Boot.co_list[id]=nil
+	end)
+	Boot.co_list[id]=co
+	local flag, msg =resume(co)
+	if not flag then						
+			error(debug.traceback(co, msg))			
+		return
+	end
+end
+
+function Boot.Update()
+	for k,co in pairs(Boot.co_list) do
+		if co~= nil then
+			local flag, msg =resume(co)
+			if not flag then						
+					error(debug.traceback(co, msg))			
+				return
+			end
+		end
+	end
+end
+
+--------------------------------------------------------------------------------------------------------------------
+--run
+function Update()
+	Boot.Update()
+end
+function Bootstrip()
+	--全部协程
+	Boot.StartCoroutine(Boot.Start)
+end

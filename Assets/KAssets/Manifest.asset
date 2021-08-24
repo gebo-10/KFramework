@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b8796abc38301c47a01e0a74c90df02, type: 3}
+  m_Name: Manifest
+  m_EditorClassIdentifier: 
+  modules:
+  - name: Common
+    DLC: 0
+    bundles:
+    - name: common_image
+      len: 9125
+      hash: e1fe5789dbc9dc0d700e68b5a4157898
+      assets:
+      - Assets/Game/Common/Atlas/Image.spriteatlas
+      deps: []
+  - name: Main
+    DLC: 0
+    bundles:
+    - name: main_image
+      len: 487416
+      hash: 99157c93370eab52d4aec312d25e8828
+      assets:
+      - Assets/Game/Main/Image/nv_5.png
+      deps: []
+    - name: main_panel
+      len: 8072
+      hash: 1de07d93ef5d94edb7b5a0639066461e
+      assets:
+      - Assets/Game/Main/Panel/PanelMain.prefab
+      deps:
+      - module: 1
+        bundle: 0
+  - name: BlackJack
+    DLC: 0
+    bundles:
+    - name: blackjack_panel
+      len: 7591
+      hash: 0efde005254b63e698a723edaedcefaf
+      assets:
+      - Assets/Game/BlackJack/Panel/PanelBlackJack.prefab
+      deps: []
+  atlas:
+  - name: Image
+    path: Assets/Game/Common/Atlas/Image.spriteatlas
+  script:
+  - name: script_main
+    len: 6603
+    hash: e9d53f28e4b77990309019cc3cfea3aa
+    assets: []
+    deps: []
+  - name: script_base
+    len: 7669
+    hash: b91f236e86714ec8502124da9a7feccd
+    assets: []
+    deps: []
+  - name: script_system
+    len: 9780
+    hash: 93bfdbfd6b3ff5e213ec77235abe5e12
+    assets: []
+    deps: []
+  - name: script_protocal
+    len: 46223
+    hash: 1db886f066fde21c6dd6ad288a1fee9c
+    assets: []
+    deps: []
